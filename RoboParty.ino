@@ -8,8 +8,13 @@
  #define PSTR
 #endif
 
-#define L_SERVO_PIN D0
-#define R_SERVO_PIN 3
+#define BLYNK_TEMPLATE_ID "TMPL4ehKU-v8S"
+#define BLYNK_TEMPLATE_NAME "RoboParty"
+#define BLYNK_AUTH_TOKEN "B4wwPBNEU8FyNx-wwnPANXGCZeyqlRk4"
+#include <BlynkSimpleEsp8266.h>
+
+#define L_SERVO_PIN 3
+#define R_SERVO_PIN D0
 #define MATRIX_PIN 1
 #define POWER 200
 
@@ -132,9 +137,21 @@ void encMove(int spdL, int spdR) {
       L(spdL); R(spdR);
   }
 }
+
+BLYNK_WRITE(V0) {
+  int pinValue = param.asInt(); //переменная текущего состояния виртуального пина
+  if (pinValue == 0){        
+     stop_all();
+  } else if (pinValue == 1) {
+      state = 0;
+      dance_1 = true;
+  }
+}
+
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void setup() {
   Serial.begin(115200);
+  Blynk.begin(BLYNK_AUTH_TOKEN, ssid, password);
   matrix.begin();
   matrix.setTextWrap(false);
   matrix.setBrightness(30);
@@ -166,7 +183,7 @@ void setup() {
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void loop() {
-  
+  Blynk.run();
   light_on = true;
   int packetSize = Udp.parsePacket();
   if (packetSize) {
@@ -189,21 +206,20 @@ void loop() {
       startTime = millis();
       if (state < 4) {
         if (state % 2 == 0) {
-          encMove(-150, 150);       
+          encMove(-150, 150);
+          servoL.write(110); servoR.write(110);        
         } else {
           encMove(150, -150);
+          servoL.write(70); servoR.write(70);
         }
       } else if (state < 8) {
         if (state % 2 == 0) {
           R(-150); L(0);
-          servoL.write(110); servoR.write(110); 
         } else {
           L(-150); R(0);
-          servoL.write(70); servoR.write(70);
         }
       } else if (state < 10) {
         encMove(200, 200);
-        servoL.write(180); servoR.write(0);
       } else {
         encMove(200, -200);
       }
